@@ -2,7 +2,11 @@
 
 A modern React-based prototype of the Open Data Hub dashboard interface, built with TypeScript, Vite, and Tailwind CSS.
 
+## Dashboard Preview
+
 ![Open Data Hub Dashboard](./src/assets/ODH_dashboard.png)
+
+*A comprehensive dashboard interface for managing data science projects, models, pipelines, and distributed workloads.*
 
 ## Features
 
