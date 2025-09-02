@@ -8,12 +8,16 @@ import {
   RESOURCE_FLAVORS, 
   COHORTS, 
   CLUSTER_RESOURCES,
+  TRAIN_JOBS,
+  TRAINING_RUNTIMES,
   type QueuedJob,
   type ClusterQueue,
   type LocalQueue,
   type ResourceFlavor,
   type Cohort,
-  type ClusterResource
+  type ClusterResource,
+  type TrainJob,
+  type TrainingRuntime
 } from '../../../utils/constants';
 
 interface Project {
@@ -51,6 +55,9 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
   const [clusterQueuesPagination, setClusterQueuesPagination] = useState({ page: 1, limit: 5 });
   const [resourceFlavorsPagination, setResourceFlavorsPagination] = useState({ page: 1, limit: 5 });
   const [cohortsPagination, setCohortsPagination] = useState({ page: 1, limit: 5 });
+  // Trainer v2 pagination states
+  const [trainJobsPagination, setTrainJobsPagination] = useState({ page: 1, limit: 5 });
+  const [trainingRuntimesPagination, setTrainingRuntimesPagination] = useState({ page: 1, limit: 5 });
 
   const queuedJobs = QUEUED_JOBS;
 
@@ -111,6 +118,16 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
           }`}
         >
           Kueue metrics
+        </button>
+        <button 
+          onClick={() => setWorkloadsTab('trainer')}
+          className={`pb-2 border-b-2 font-medium ${
+            workloadsTab === 'trainer' 
+              ? 'border-blue-600 text-blue-600' 
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Trainer metrics
         </button>
       </div>
 
@@ -857,6 +874,470 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                 totalPages={paginateData(COHORTS, cohortsPagination).totalPages}
                 totalItems={COHORTS.length}
               />
+            </div>
+          </div>
+        </>
+      ) : workloadsTab === 'trainer' ? (
+        <>
+          {/* Kubeflow Trainer v2 Metrics Dashboard */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Active TrainJobs */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-blue-600" />
+                </div>
+                <span className="text-2xl font-bold text-blue-600">8</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-1">Active TrainJobs</h3>
+              <p className="text-sm text-gray-600">Running training jobs</p>
+            </div>
+
+            {/* JobSets Created */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Server className="w-5 h-5 text-green-600" />
+                </div>
+                <span className="text-2xl font-bold text-green-600">12</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-1">JobSets</h3>
+              <p className="text-sm text-gray-600">Distributed job groups</p>
+            </div>
+
+            {/* Training Pods */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Cpu className="w-5 h-5 text-purple-600" />
+                </div>
+                <span className="text-2xl font-bold text-purple-600">48</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-1">Training Pods</h3>
+              <p className="text-sm text-gray-600">Worker + initializer pods</p>
+            </div>
+
+            {/* GPU Utilization */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-orange-600" />
+                </div>
+                <span className="text-2xl font-bold text-orange-600">87%</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-1">GPU Utilization</h3>
+              <p className="text-sm text-gray-600">Across training nodes</p>
+            </div>
+          </div>
+
+          {/* Trainer v2 Architecture Flow */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-6">Kubeflow Trainer v2 Resource Flow</h3>
+            <div className="flex items-center justify-center space-x-4 overflow-x-auto">
+              <div className="flex flex-col items-center min-w-0">
+                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                  <Package className="w-8 h-8 text-blue-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">TrainJob</span>
+                <span className="text-xs text-gray-500">User Request</span>
+              </div>
+              
+              <div className="flex items-center">
+                <ChevronRight className="w-6 h-6 text-gray-400" />
+              </div>
+              
+              <div className="flex flex-col items-center min-w-0">
+                <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-2">
+                  <Server className="w-8 h-8 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">TrainingRuntime</span>
+                <span className="text-xs text-gray-500">Template/Blueprint</span>
+              </div>
+              
+              <div className="flex items-center">
+                <ChevronRight className="w-6 h-6 text-gray-400" />
+              </div>
+              
+              <div className="flex flex-col items-center min-w-0">
+                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
+                  <Users className="w-8 h-8 text-purple-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">JobSet</span>
+                <span className="text-xs text-gray-500">Job Orchestrator</span>
+              </div>
+              
+              <div className="flex items-center">
+                <ChevronRight className="w-6 h-6 text-gray-400" />
+              </div>
+              
+              <div className="flex flex-col items-center min-w-0">
+                <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mb-2">
+                  <Play className="w-8 h-8 text-orange-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">Jobs</span>
+                <span className="text-xs text-gray-500">Worker/Initializer</span>
+              </div>
+              
+              <div className="flex items-center">
+                <ChevronRight className="w-6 h-6 text-gray-400" />
+              </div>
+              
+              <div className="flex flex-col items-center min-w-0">
+                <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mb-2">
+                  <Cpu className="w-8 h-8 text-red-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">Pods</span>
+                <span className="text-xs text-gray-500">Execution Units</span>
+              </div>
+            </div>
+          </div>
+
+          {/* TrainJobs Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Active TrainJobs</h3>
+                <p className="text-sm text-gray-600">Unified training job CRDs</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="text-left p-3 font-medium text-gray-700">Name</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Runtime</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Nodes</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const paginatedTrainJobs = paginateData(TRAIN_JOBS, trainJobsPagination);
+                      return paginatedTrainJobs.data.map((job, index) => (
+                        <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
+                          <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{job.name}</td>
+                          <td className="p-3">
+                            <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                              job.runtime.includes('torch') ? 'bg-orange-100 text-orange-800' :
+                              job.runtime.includes('llm') ? 'bg-blue-100 text-blue-800' :
+                              job.runtime.includes('tf') ? 'bg-purple-100 text-purple-800' :
+                              job.runtime.includes('mpi') ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {job.runtime}
+                            </span>
+                          </td>
+                          <td className="p-3 text-gray-700 text-sm">{job.nodes}</td>
+                          <td className="p-3">
+                            <div className="flex items-center">
+                              {getStatusIcon(job.status)}
+                              <span className="text-sm ml-2">{job.status}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationControls 
+                pagination={trainJobsPagination}
+                setPagination={setTrainJobsPagination}
+                totalPages={paginateData(TRAIN_JOBS, trainJobsPagination).totalPages}
+                totalItems={TRAIN_JOBS.length}
+              />
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">JobSets & Resource Allocation</h3>
+                <p className="text-sm text-gray-600">Kubernetes-native job orchestration</p>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                      <span className="text-sm text-gray-700">Worker Jobs</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-gray-900 mr-2">24</span>
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '80%'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                      <span className="text-sm text-gray-700">Initializer Jobs</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-gray-900 mr-2">8</span>
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{width: '100%'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                      <span className="text-sm text-gray-700">MPI Jobs</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-gray-900 mr-2">16</span>
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div className="bg-purple-500 h-2 rounded-full" style={{width: '75%'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Training Runtimes */}
+          <div className="bg-white rounded-lg border border-gray-200 mb-8">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Training Runtimes</h3>
+              <p className="text-sm text-gray-600">Reusable execution templates and blueprints</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left p-3 font-medium text-gray-700">Runtime Name</th>
+                    <th className="text-left p-3 font-medium text-gray-700">Type</th>
+                    <th className="text-left p-3 font-medium text-gray-700">Framework</th>
+                    <th className="text-left p-3 font-medium text-gray-700">Gang Scheduling</th>
+                    <th className="text-left p-3 font-medium text-gray-700">Active Jobs</th>
+                    <th className="text-left p-3 font-medium text-gray-700">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const paginatedRuntimes = paginateData(TRAINING_RUNTIMES, trainingRuntimesPagination);
+                    return paginatedRuntimes.data.map((runtime, index) => (
+                      <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
+                        <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{runtime.name}</td>
+                        <td className="p-3">
+                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                            runtime.type === 'ClusterTrainingRuntime' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {runtime.type}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-700 text-sm">{runtime.framework}</td>
+                        <td className="p-3">
+                          {runtime.gangScheduling ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-gray-400" />
+                          )}
+                        </td>
+                        <td className="p-3 text-gray-700 text-sm">{runtime.activeJobs}</td>
+                        <td className="p-3">
+                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                            runtime.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {runtime.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+            </div>
+            <PaginationControls 
+              pagination={trainingRuntimesPagination}
+              setPagination={setTrainingRuntimesPagination}
+              totalPages={paginateData(TRAINING_RUNTIMES, trainingRuntimesPagination).totalPages}
+              totalItems={TRAINING_RUNTIMES.length}
+            />
+          </div>
+
+          {/* Pod Status & Resource Utilization */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Pod Status Distribution</h3>
+                <p className="text-sm text-gray-600">Training and initializer pods</p>
+              </div>
+              <div className="p-6">
+                <div className="relative w-48 h-48 mx-auto mb-6">
+                  <svg viewBox="0 0 200 200" className="w-full h-full">
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="#e5e7eb" strokeWidth="20" />
+                    <circle 
+                      cx="100" 
+                      cy="100" 
+                      r="80" 
+                      fill="none" 
+                      stroke="#3b82f6" 
+                      strokeWidth="20"
+                      strokeDasharray="314"
+                      strokeDashoffset="78.5"
+                      transform="rotate(-90 100 100)"
+                    />
+                    <circle 
+                      cx="100" 
+                      cy="100" 
+                      r="80" 
+                      fill="none" 
+                      stroke="#10b981" 
+                      strokeWidth="20"
+                      strokeDasharray="157"
+                      strokeDashoffset="0"
+                      transform="rotate(180 100 100)"
+                    />
+                    <text x="100" y="90" textAnchor="middle" className="text-2xl font-bold fill-gray-900">48</text>
+                    <text x="100" y="110" textAnchor="middle" className="text-sm fill-gray-600">Total Pods</text>
+                  </svg>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                      <span>Running: 36</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                      <span>Completed: 8</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                      <span>Pending: 3</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                      <span>Failed: 1</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Resource Utilization</h3>
+                <p className="text-sm text-gray-600">Training workload efficiency</p>
+              </div>
+              <div className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>GPU Utilization</span>
+                      <span className="font-medium">87%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full" style={{width: '87%'}}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>CPU Utilization</span>
+                      <span className="font-medium">72%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style={{width: '72%'}}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Memory Utilization</span>
+                      <span className="font-medium">68%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full" style={{width: '68%'}}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Network I/O</span>
+                      <span className="font-medium">45%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full" style={{width: '45%'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fault Tolerance & Gang Scheduling */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Fault Tolerance & Retries</h3>
+                <p className="text-sm text-gray-600">Job resilience and recovery</p>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Successful Restarts</span>
+                    <span className="text-sm font-medium text-green-600">12</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Failed Restarts</span>
+                    <span className="text-sm font-medium text-red-600">2</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Max Retry Limit Reached</span>
+                    <span className="text-sm font-medium text-orange-600">1</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Node Failure Recovery</span>
+                    <span className="text-sm font-medium text-blue-600">5</span>
+                  </div>
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Recovery Success Rate</span>
+                      <span className="font-medium">85%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{width: '85%'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Gang Scheduling Metrics</h3>
+                <p className="text-sm text-gray-600">Coordinated pod scheduling</p>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Gang-Scheduled Jobs</span>
+                    <span className="text-sm font-medium text-blue-600">8/8</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Avg. Scheduling Time</span>
+                    <span className="text-sm font-medium text-green-600">2.3s</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Scheduling Failures</span>
+                    <span className="text-sm font-medium text-red-600">0</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Resource Conflicts</span>
+                    <span className="text-sm font-medium text-orange-600">1</span>
+                  </div>
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Scheduling Efficiency</span>
+                      <span className="font-medium">96%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full" style={{width: '96%'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </>

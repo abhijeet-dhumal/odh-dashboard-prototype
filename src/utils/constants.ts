@@ -152,6 +152,25 @@ export interface ClusterResource {
   percentage: number;
 }
 
+// Kubeflow Trainer v2 types
+export interface TrainJob {
+  name: string;
+  runtime: string;
+  nodes: number;
+  status: string;
+  framework: string;
+  created: string;
+}
+
+export interface TrainingRuntime {
+  name: string;
+  type: 'ClusterTrainingRuntime' | 'TrainingRuntime';
+  framework: string;
+  gangScheduling: boolean;
+  activeJobs: number;
+  status: string;
+}
+
 export const PROJECTS: Project[] = [
   {
     name: 'textual-analysis',
@@ -708,3 +727,154 @@ export const CLUSTER_RESOURCES: { [key: string]: ClusterResource } = {
     percentage: 75
   }
 };
+
+// Kubeflow Trainer v2 mock data
+export const TRAIN_JOBS: TrainJob[] = [
+  {
+    name: 'pytorch-distributed-training',
+    runtime: 'torch-distributed',
+    nodes: 4,
+    status: 'Running',
+    framework: 'PyTorch',
+    created: '2025-01-15 10:30:00'
+  },
+  {
+    name: 'llm-fine-tuning-job',
+    runtime: 'llm-runtime',
+    nodes: 8,
+    status: 'Initializing',
+    framework: 'Transformers',
+    created: '2025-01-15 11:15:00'
+  },
+  {
+    name: 'tensorflow-multi-worker',
+    runtime: 'tf-distributed',
+    nodes: 2,
+    status: 'Completed',
+    framework: 'TensorFlow',
+    created: '2025-01-15 09:45:00'
+  },
+  {
+    name: 'bert-pretraining-large',
+    runtime: 'llm-runtime',
+    nodes: 16,
+    status: 'Running',
+    framework: 'Transformers',
+    created: '2025-01-15 08:20:00'
+  },
+  {
+    name: 'resnet-distributed-training',
+    runtime: 'torch-distributed',
+    nodes: 6,
+    status: 'Pending',
+    framework: 'PyTorch',
+    created: '2025-01-15 12:00:00'
+  },
+  {
+    name: 'gpt-fine-tuning-medical',
+    runtime: 'llm-runtime',
+    nodes: 12,
+    status: 'Running',
+    framework: 'Transformers',
+    created: '2025-01-15 07:30:00'
+  },
+  {
+    name: 'mpi-hpc-simulation',
+    runtime: 'mpi-runtime',
+    nodes: 32,
+    status: 'Running',
+    framework: 'MPI',
+    created: '2025-01-15 06:15:00'
+  },
+  {
+    name: 'tensorflow-recommendation',
+    runtime: 'tf-distributed',
+    nodes: 4,
+    status: 'Failed',
+    framework: 'TensorFlow',
+    created: '2025-01-15 13:45:00'
+  },
+  {
+    name: 'pytorch-vision-training',
+    runtime: 'torch-distributed',
+    nodes: 8,
+    status: 'Completed',
+    framework: 'PyTorch',
+    created: '2025-01-14 16:20:00'
+  },
+  {
+    name: 'llama-instruction-tuning',
+    runtime: 'llm-runtime',
+    nodes: 24,
+    status: 'Running',
+    framework: 'Transformers',
+    created: '2025-01-15 05:10:00'
+  }
+];
+
+export const TRAINING_RUNTIMES: TrainingRuntime[] = [
+  {
+    name: 'torch-distributed',
+    type: 'ClusterTrainingRuntime',
+    framework: 'PyTorch',
+    gangScheduling: true,
+    activeJobs: 3,
+    status: 'Active'
+  },
+  {
+    name: 'llm-runtime',
+    type: 'TrainingRuntime',
+    framework: 'Transformers',
+    gangScheduling: true,
+    activeJobs: 4,
+    status: 'Active'
+  },
+  {
+    name: 'tf-distributed',
+    type: 'ClusterTrainingRuntime',
+    framework: 'TensorFlow',
+    gangScheduling: true,
+    activeJobs: 1,
+    status: 'Active'
+  },
+  {
+    name: 'mpi-runtime',
+    type: 'ClusterTrainingRuntime',
+    framework: 'MPI',
+    gangScheduling: true,
+    activeJobs: 1,
+    status: 'Active'
+  },
+  {
+    name: 'jax-distributed',
+    type: 'ClusterTrainingRuntime',
+    framework: 'JAX',
+    gangScheduling: true,
+    activeJobs: 0,
+    status: 'Inactive'
+  },
+  {
+    name: 'horovod-runtime',
+    type: 'TrainingRuntime',
+    framework: 'Horovod',
+    gangScheduling: true,
+    activeJobs: 0,
+    status: 'Inactive'
+  },
+  {
+    name: 'ray-distributed',
+    type: 'ClusterTrainingRuntime',
+    framework: 'Ray',
+    gangScheduling: false,
+    activeJobs: 2,
+    status: 'Active'
+  },
+  {
+    name: 'xgboost-runtime',
+    type: 'TrainingRuntime',
+    framework: 'XGBoost',
+    gangScheduling: false,
+    activeJobs: 1,
+    status: 'Active'
+  }
+];
