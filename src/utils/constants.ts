@@ -94,6 +94,7 @@ export interface QueuedJob {
   created: string;
   resources: { cpu: string; memory: string; gpu: string };
   position: number;
+  namespace: string;
 }
 
 export interface ClusterQueue {
@@ -160,6 +161,7 @@ export interface TrainJob {
   status: string;
   framework: string;
   created: string;
+  namespace?: string;
 }
 
 export interface TrainingRuntime {
@@ -169,6 +171,7 @@ export interface TrainingRuntime {
   gangScheduling: boolean;
   activeJobs: number;
   status: string;
+  namespace?: string; // Only for TrainingRuntime, ClusterTrainingRuntime is cluster-wide
 }
 
 export const PROJECTS: Project[] = [
@@ -428,7 +431,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Pending',
     created: '01/09/2025, 15:30:00',
     resources: { cpu: '4 cores', memory: '16 GB', gpu: '2x V100' },
-    position: 1
+    position: 1,
+    namespace: 'textual-analysis'
   },
   {
     name: 'tensorflow-training-job-002',
@@ -438,7 +442,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Admitted',
     created: '01/09/2025, 15:25:00',
     resources: { cpu: '8 cores', memory: '32 GB', gpu: '4x A100' },
-    position: 2
+    position: 2,
+    namespace: 'fraud-detection'
   },
   {
     name: 'data-processing-job-003',
@@ -448,7 +453,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Pending',
     created: '01/09/2025, 15:20:00',
     resources: { cpu: '2 cores', memory: '8 GB', gpu: 'None' },
-    position: 3
+    position: 3,
+    namespace: 'image-classification'
   },
   {
     name: 'hyperparameter-tuning-004',
@@ -458,7 +464,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Inadmissible',
     created: '01/09/2025, 15:15:00',
     resources: { cpu: '16 cores', memory: '64 GB', gpu: '8x V100' },
-    position: 4
+    position: 4,
+    namespace: 'textual-analysis'
   },
   {
     name: 'bert-fine-tuning-005',
@@ -468,7 +475,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Pending',
     created: '01/09/2025, 15:10:00',
     resources: { cpu: '8 cores', memory: '32 GB', gpu: '4x A100' },
-    position: 5
+    position: 5,
+    namespace: 'nlp-research'
   },
   {
     name: 'image-classification-006',
@@ -478,7 +486,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Admitted',
     created: '01/09/2025, 15:05:00',
     resources: { cpu: '4 cores', memory: '16 GB', gpu: '2x T4' },
-    position: 6
+    position: 6,
+    namespace: 'dedicated-admin'
   },
   {
     name: 'nlp-sentiment-007',
@@ -488,7 +497,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Pending',
     created: '01/09/2025, 15:00:00',
     resources: { cpu: '6 cores', memory: '24 GB', gpu: '2x V100' },
-    position: 7
+    position: 7,
+    namespace: 'ml-workload-queue'
   },
   {
     name: 'recommendation-system-008',
@@ -498,7 +508,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Inadmissible',
     created: '01/09/2025, 14:55:00',
     resources: { cpu: '12 cores', memory: '48 GB', gpu: '4x T4' },
-    position: 8
+    position: 8,
+    namespace: 'data-processing'
   },
   {
     name: 'object-detection-009',
@@ -508,7 +519,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Admitted',
     created: '01/09/2025, 14:50:00',
     resources: { cpu: '10 cores', memory: '40 GB', gpu: '4x V100' },
-    position: 9
+    position: 9,
+    namespace: 'dedicated-admin'
   },
   {
     name: 'speech-recognition-010',
@@ -518,7 +530,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Pending',
     created: '01/09/2025, 14:45:00',
     resources: { cpu: '6 cores', memory: '24 GB', gpu: '2x T4' },
-    position: 10
+    position: 10,
+    namespace: 'ml-workload-queue'
   },
   {
     name: 'time-series-forecast-011',
@@ -528,7 +541,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Inadmissible',
     created: '01/09/2025, 14:40:00',
     resources: { cpu: '4 cores', memory: '16 GB', gpu: 'None' },
-    position: 11
+    position: 11,
+    namespace: 'data-processing'
   },
   {
     name: 'transformer-pretraining-012',
@@ -538,7 +552,8 @@ export const QUEUED_JOBS: QueuedJob[] = [
     status: 'Pending',
     created: '01/09/2025, 14:35:00',
     resources: { cpu: '32 cores', memory: '128 GB', gpu: '8x A100' },
-    position: 12
+    position: 12,
+    namespace: 'istio-system'
   }
 ];
 
@@ -604,6 +619,46 @@ export const LOCAL_QUEUES: LocalQueue[] = [
     pendingWorkloads: 8,
     admittedWorkloads: 1,
     created: '01/09/2025, 08:45:00'
+  },
+  {
+    name: 'textual-analysis-queue',
+    namespace: 'textual-analysis',
+    clusterQueue: 'ml-workload-queue',
+    pendingWorkloads: 2,
+    admittedWorkloads: 3,
+    created: '01/09/2025, 12:00:00'
+  },
+  {
+    name: 'dedicated-admin-queue',
+    namespace: 'dedicated-admin',
+    clusterQueue: 'ml-workload-queue',
+    pendingWorkloads: 1,
+    admittedWorkloads: 2,
+    created: '01/09/2025, 13:30:00'
+  },
+  {
+    name: 'ml-workload-local-queue',
+    namespace: 'ml-workload-queue',
+    clusterQueue: 'ml-workload-queue',
+    pendingWorkloads: 4,
+    admittedWorkloads: 6,
+    created: '01/09/2025, 14:15:00'
+  },
+  {
+    name: 'data-processing-queue',
+    namespace: 'data-processing',
+    clusterQueue: 'batch-queue',
+    pendingWorkloads: 3,
+    admittedWorkloads: 1,
+    created: '01/09/2025, 15:45:00'
+  },
+  {
+    name: 'istio-system-queue',
+    namespace: 'istio-system',
+    clusterQueue: 'inference-queue',
+    pendingWorkloads: 0,
+    admittedWorkloads: 1,
+    created: '01/09/2025, 16:20:00'
   }
 ];
 
@@ -736,7 +791,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 4,
     status: 'Running',
     framework: 'PyTorch',
-    created: '2025-01-15 10:30:00'
+    created: '2025-01-15 10:30:00',
+    namespace: 'textual-analysis'
   },
   {
     name: 'llm-fine-tuning-job',
@@ -744,7 +800,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 8,
     status: 'Initializing',
     framework: 'Transformers',
-    created: '2025-01-15 11:15:00'
+    created: '2025-01-15 11:15:00',
+    namespace: 'nlp-research'
   },
   {
     name: 'tensorflow-multi-worker',
@@ -752,7 +809,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 2,
     status: 'Completed',
     framework: 'TensorFlow',
-    created: '2025-01-15 09:45:00'
+    created: '2025-01-15 09:45:00',
+    namespace: 'fraud-detection'
   },
   {
     name: 'bert-pretraining-large',
@@ -760,7 +818,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 16,
     status: 'Running',
     framework: 'Transformers',
-    created: '2025-01-15 08:20:00'
+    created: '2025-01-15 08:20:00',
+    namespace: 'nlp-research'
   },
   {
     name: 'resnet-distributed-training',
@@ -768,7 +827,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 6,
     status: 'Pending',
     framework: 'PyTorch',
-    created: '2025-01-15 12:00:00'
+    created: '2025-01-15 12:00:00',
+    namespace: 'image-classification'
   },
   {
     name: 'gpt-fine-tuning-medical',
@@ -776,7 +836,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 12,
     status: 'Running',
     framework: 'Transformers',
-    created: '2025-01-15 07:30:00'
+    created: '2025-01-15 07:30:00',
+    namespace: 'dedicated-admin'
   },
   {
     name: 'mpi-hpc-simulation',
@@ -784,7 +845,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 32,
     status: 'Running',
     framework: 'MPI',
-    created: '2025-01-15 06:15:00'
+    created: '2025-01-15 06:15:00',
+    namespace: 'ml-workload-queue'
   },
   {
     name: 'tensorflow-recommendation',
@@ -792,7 +854,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 4,
     status: 'Failed',
     framework: 'TensorFlow',
-    created: '2025-01-15 13:45:00'
+    created: '2025-01-15 13:45:00',
+    namespace: 'data-processing'
   },
   {
     name: 'pytorch-vision-training',
@@ -800,7 +863,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 8,
     status: 'Completed',
     framework: 'PyTorch',
-    created: '2025-01-14 16:20:00'
+    created: '2025-01-14 16:20:00',
+    namespace: 'dedicated-admin'
   },
   {
     name: 'llama-instruction-tuning',
@@ -808,7 +872,8 @@ export const TRAIN_JOBS: TrainJob[] = [
     nodes: 24,
     status: 'Running',
     framework: 'Transformers',
-    created: '2025-01-15 05:10:00'
+    created: '2025-01-15 05:10:00',
+    namespace: 'istio-system'
   }
 ];
 
@@ -827,7 +892,8 @@ export const TRAINING_RUNTIMES: TrainingRuntime[] = [
     framework: 'Transformers',
     gangScheduling: true,
     activeJobs: 4,
-    status: 'Active'
+    status: 'Active',
+    namespace: 'nlp-research'
   },
   {
     name: 'tf-distributed',
@@ -859,7 +925,8 @@ export const TRAINING_RUNTIMES: TrainingRuntime[] = [
     framework: 'Horovod',
     gangScheduling: true,
     activeJobs: 0,
-    status: 'Inactive'
+    status: 'Inactive',
+    namespace: 'textual-analysis'
   },
   {
     name: 'ray-distributed',
@@ -875,6 +942,7 @@ export const TRAINING_RUNTIMES: TrainingRuntime[] = [
     framework: 'XGBoost',
     gangScheduling: false,
     activeJobs: 1,
-    status: 'Active'
+    status: 'Active',
+    namespace: 'fraud-detection'
   }
 ];

@@ -36,7 +36,7 @@ const DashboardMain = () => {
     applications: false,
     settings: false
   });
-  const [selectedProject, setSelectedProject] = useState('ml-workload-queue');
+  const [selectedProject, setSelectedProject] = useState('All Projects');
   const [showJobActions, setShowJobActions] = useState(false);
 
   const toggleSection = (section: string) => {

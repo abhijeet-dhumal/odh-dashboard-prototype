@@ -58,8 +58,33 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
   // Trainer v2 pagination states
   const [trainJobsPagination, setTrainJobsPagination] = useState({ page: 1, limit: 5 });
   const [trainingRuntimesPagination, setTrainingRuntimesPagination] = useState({ page: 1, limit: 5 });
+  const [clusterTrainingRuntimesPagination, setClusterTrainingRuntimesPagination] = useState({ page: 1, limit: 5 });
 
-  const queuedJobs = QUEUED_JOBS;
+  // Helper functions for namespace filtering
+  const filterByNamespace = <T extends { namespace?: string }>(items: T[], selectedProject: string | null): T[] => {
+    if (!selectedProject || selectedProject === 'All Projects') {
+      return items;
+    }
+    return items.filter(item => item.namespace === selectedProject);
+  };
+
+  // Filtered data based on selected project
+  const filteredQueuedJobs = filterByNamespace(QUEUED_JOBS, selectedProject);
+  const filteredTrainJobs = filterByNamespace(TRAIN_JOBS, selectedProject);
+  // TrainingRuntimes: namespace-scoped (filtered), ClusterTrainingRuntimes: cluster-wide (always visible)
+  const filteredTrainingRuntimes = selectedProject && selectedProject !== 'All Projects' 
+    ? TRAINING_RUNTIMES.filter(runtime => 
+        // Include namespace-scoped TrainingRuntimes for selected namespace
+        (runtime.type === 'TrainingRuntime' && runtime.namespace === selectedProject) ||
+        // Always include cluster-wide ClusterTrainingRuntimes
+        runtime.type === 'ClusterTrainingRuntime'
+      )
+    : TRAINING_RUNTIMES;
+  const filteredLocalQueues = filterByNamespace(LOCAL_QUEUES, selectedProject);
+  // Cluster-wide resources are always visible regardless of namespace selection
+  const filteredClusterQueues = CLUSTER_QUEUES;
+  const filteredResourceFlavors = RESOURCE_FLAVORS;
+  const filteredCohorts = COHORTS;
 
   return (
     <div className="p-6">
@@ -79,6 +104,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
           onChange={(e) => setSelectedProject(e.target.value)}
           className="border border-gray-300 rounded px-3 py-1 mr-4"
         >
+          <option value="All Projects">All Projects</option>
           {projects.map(project => (
             <option key={project.name} value={project.name}>{project.name}</option>
           ))}
@@ -145,6 +171,16 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
 
       {workloadsTab === 'status' ? (
         <>
+          {/* Namespace Scope Indicator */}
+          {selectedProject && selectedProject !== 'All Projects' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-700">
+                <strong>Namespace Scope:</strong> Showing resources for "{selectedProject}" namespace. 
+                Cluster-wide resources (ClusterQueues, ResourceFlavors, Cohorts) remain visible as they are cluster-scoped.
+              </p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Status overview</h3>
@@ -579,7 +615,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                 </thead>
                 <tbody>
                   {(() => {
-                    const paginatedWorkloads = paginateData(queuedJobs, workloadsPagination);
+                    const paginatedWorkloads = paginateData(filteredQueuedJobs, workloadsPagination);
                     return paginatedWorkloads.data.map((job: any, index: number) => (
                       <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
                         <td className="p-3">
@@ -626,8 +662,8 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
             <PaginationControls 
               pagination={workloadsPagination}
               setPagination={setWorkloadsPagination}
-              totalPages={paginateData(queuedJobs, workloadsPagination).totalPages}
-              totalItems={queuedJobs.length}
+              totalPages={paginateData(filteredQueuedJobs, workloadsPagination).totalPages}
+              totalItems={filteredQueuedJobs.length}
             />
           </div>
 
@@ -651,7 +687,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                   </thead>
                   <tbody>
                     {(() => {
-                      const paginatedLocalQueues = paginateData(LOCAL_QUEUES, localQueuesPagination);
+                      const paginatedLocalQueues = paginateData(filteredLocalQueues, localQueuesPagination);
                       return paginatedLocalQueues.data.map((queue: any, index: number) => (
                         <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
                           <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{queue.name}</td>
@@ -677,8 +713,8 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
               <PaginationControls 
                 pagination={localQueuesPagination}
                 setPagination={setLocalQueuesPagination}
-                totalPages={paginateData(LOCAL_QUEUES, localQueuesPagination).totalPages}
-                totalItems={LOCAL_QUEUES.length}
+                totalPages={paginateData(filteredLocalQueues, localQueuesPagination).totalPages}
+                totalItems={filteredLocalQueues.length}
               />
             </div>
 
@@ -700,7 +736,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                   </thead>
                   <tbody>
                     {(() => {
-                      const paginatedClusterQueues = paginateData(CLUSTER_QUEUES, clusterQueuesPagination);
+                      const paginatedClusterQueues = paginateData(filteredClusterQueues, clusterQueuesPagination);
                       return paginatedClusterQueues.data.map((queue: any, index: number) => (
                         <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
                           <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{queue.name}</td>
@@ -732,8 +768,8 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
               <PaginationControls 
                 pagination={clusterQueuesPagination}
                 setPagination={setClusterQueuesPagination}
-                totalPages={paginateData(CLUSTER_QUEUES, clusterQueuesPagination).totalPages}
-                totalItems={CLUSTER_QUEUES.length}
+                totalPages={paginateData(filteredClusterQueues, clusterQueuesPagination).totalPages}
+                totalItems={filteredClusterQueues.length}
               />
             </div>
           </div>
@@ -758,7 +794,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                   </thead>
                   <tbody>
                     {(() => {
-                      const paginatedResourceFlavors = paginateData(RESOURCE_FLAVORS, resourceFlavorsPagination);
+                      const paginatedResourceFlavors = paginateData(filteredResourceFlavors, resourceFlavorsPagination);
                       return paginatedResourceFlavors.data.map((flavor: any, index: number) => (
                         <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
                           <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{flavor.name}</td>
@@ -798,8 +834,8 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
               <PaginationControls 
                 pagination={resourceFlavorsPagination}
                 setPagination={setResourceFlavorsPagination}
-                totalPages={paginateData(RESOURCE_FLAVORS, resourceFlavorsPagination).totalPages}
-                totalItems={RESOURCE_FLAVORS.length}
+                totalPages={paginateData(filteredResourceFlavors, resourceFlavorsPagination).totalPages}
+                totalItems={filteredResourceFlavors.length}
               />
             </div>
 
@@ -821,7 +857,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                   </thead>
                   <tbody>
                     {(() => {
-                      const paginatedCohorts = paginateData(COHORTS, cohortsPagination);
+                      const paginatedCohorts = paginateData(filteredCohorts, cohortsPagination);
                       return paginatedCohorts.data.map((cohort: any, index: number) => (
                         <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
                           <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{cohort.name}</td>
@@ -871,14 +907,24 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
               <PaginationControls 
                 pagination={cohortsPagination}
                 setPagination={setCohortsPagination}
-                totalPages={paginateData(COHORTS, cohortsPagination).totalPages}
-                totalItems={COHORTS.length}
+                totalPages={paginateData(filteredCohorts, cohortsPagination).totalPages}
+                totalItems={filteredCohorts.length}
               />
             </div>
           </div>
         </>
       ) : workloadsTab === 'trainer' ? (
         <>
+          {/* Namespace Scope Indicator */}
+          {selectedProject && selectedProject !== 'All Projects' && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-green-700">
+                <strong>Namespace Scope:</strong> Showing TrainJobs and namespace-scoped TrainingRuntimes for "{selectedProject}" namespace. 
+                ClusterTrainingRuntimes remain visible as they are cluster-wide resources.
+              </p>
+            </div>
+          )}
+          
           {/* Kubeflow Trainer v2 Metrics Dashboard */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Active TrainJobs */}
@@ -887,7 +933,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Package className="w-5 h-5 text-blue-600" />
                 </div>
-                <span className="text-2xl font-bold text-blue-600">8</span>
+                <span className="text-2xl font-bold text-blue-600">{filteredTrainJobs.length}</span>
               </div>
               <h3 className="font-medium text-gray-900 mb-1">Active TrainJobs</h3>
               <p className="text-sm text-gray-600">Running training jobs</p>
@@ -899,7 +945,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                   <Server className="w-5 h-5 text-green-600" />
                 </div>
-                <span className="text-2xl font-bold text-green-600">12</span>
+                <span className="text-2xl font-bold text-green-600">{filteredTrainJobs.length}</span>
               </div>
               <h3 className="font-medium text-gray-900 mb-1">JobSets</h3>
               <p className="text-sm text-gray-600">Distributed job groups</p>
@@ -1011,7 +1057,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
                   </thead>
                   <tbody>
                     {(() => {
-                      const paginatedTrainJobs = paginateData(TRAIN_JOBS, trainJobsPagination);
+                      const paginatedTrainJobs = paginateData(filteredTrainJobs, trainJobsPagination);
                       return paginatedTrainJobs.data.map((job, index) => (
                         <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
                           <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{job.name}</td>
@@ -1042,8 +1088,8 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
               <PaginationControls 
                 pagination={trainJobsPagination}
                 setPagination={setTrainJobsPagination}
-                totalPages={paginateData(TRAIN_JOBS, trainJobsPagination).totalPages}
-                totalItems={TRAIN_JOBS.length}
+                totalPages={paginateData(filteredTrainJobs, trainJobsPagination).totalPages}
+                totalItems={filteredTrainJobs.length}
               />
             </div>
 
@@ -1095,65 +1141,109 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
             </div>
           </div>
 
-          {/* Training Runtimes */}
-          <div className="bg-white rounded-lg border border-gray-200 mb-8">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Training Runtimes</h3>
-              <p className="text-sm text-gray-600">Reusable execution templates and blueprints</p>
+          {/* Training Runtimes & Cluster Training Runtimes - 2 Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* TrainingRuntimes (Namespace-scoped) */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">TrainingRuntimes</h3>
+                <p className="text-sm text-gray-600">Namespace-scoped execution templates</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="text-left p-3 font-medium text-gray-700">Name</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Namespace</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Framework</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const namespacedRuntimes = filteredTrainingRuntimes.filter(runtime => runtime.type === 'TrainingRuntime');
+                      const paginatedRuntimes = paginateData(namespacedRuntimes, trainingRuntimesPagination);
+                      return paginatedRuntimes.data.map((runtime, index) => (
+                        <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
+                          <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{runtime.name}</td>
+                          <td className="p-3">
+                            <span className="inline-flex px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                              {runtime.namespace || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-gray-700 text-sm">{runtime.framework}</td>
+                          <td className="p-3">
+                            <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                              runtime.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {runtime.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationControls 
+                pagination={trainingRuntimesPagination}
+                setPagination={setTrainingRuntimesPagination}
+                totalPages={paginateData(filteredTrainingRuntimes.filter(runtime => runtime.type === 'TrainingRuntime'), trainingRuntimesPagination).totalPages}
+                totalItems={filteredTrainingRuntimes.filter(runtime => runtime.type === 'TrainingRuntime').length}
+              />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-3 font-medium text-gray-700">Runtime Name</th>
-                    <th className="text-left p-3 font-medium text-gray-700">Type</th>
-                    <th className="text-left p-3 font-medium text-gray-700">Framework</th>
-                    <th className="text-left p-3 font-medium text-gray-700">Gang Scheduling</th>
-                    <th className="text-left p-3 font-medium text-gray-700">Active Jobs</th>
-                    <th className="text-left p-3 font-medium text-gray-700">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    const paginatedRuntimes = paginateData(TRAINING_RUNTIMES, trainingRuntimesPagination);
-                    return paginatedRuntimes.data.map((runtime, index) => (
-                      <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
-                        <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{runtime.name}</td>
-                        <td className="p-3">
-                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                            runtime.type === 'ClusterTrainingRuntime' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {runtime.type}
-                          </span>
-                        </td>
-                        <td className="p-3 text-gray-700 text-sm">{runtime.framework}</td>
-                        <td className="p-3">
-                          {runtime.gangScheduling ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-gray-400" />
-                          )}
-                        </td>
-                        <td className="p-3 text-gray-700 text-sm">{runtime.activeJobs}</td>
-                        <td className="p-3">
-                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                            runtime.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {runtime.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ));
-                  })()}
-                </tbody>
-              </table>
+
+            {/* ClusterTrainingRuntimes (Cluster-wide) */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">ClusterTrainingRuntimes</h3>
+                <p className="text-sm text-gray-600">Cluster-wide execution templates</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="text-left p-3 font-medium text-gray-700">Name</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Framework</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Gang Scheduling</th>
+                      <th className="text-left p-3 font-medium text-gray-700">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const clusterRuntimes = TRAINING_RUNTIMES.filter(runtime => runtime.type === 'ClusterTrainingRuntime');
+                      const paginatedClusterRuntimes = paginateData(clusterRuntimes, clusterTrainingRuntimesPagination);
+                      return paginatedClusterRuntimes.data.map((runtime, index) => (
+                        <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
+                          <td className="p-3 text-blue-600 hover:underline cursor-pointer text-sm">{runtime.name}</td>
+                          <td className="p-3 text-gray-700 text-sm">{runtime.framework}</td>
+                          <td className="p-3">
+                            {runtime.gangScheduling ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-gray-400" />
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                              runtime.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {runtime.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationControls 
+                pagination={clusterTrainingRuntimesPagination}
+                setPagination={setClusterTrainingRuntimesPagination}
+                totalPages={paginateData(TRAINING_RUNTIMES.filter(runtime => runtime.type === 'ClusterTrainingRuntime'), clusterTrainingRuntimesPagination).totalPages}
+                totalItems={TRAINING_RUNTIMES.filter(runtime => runtime.type === 'ClusterTrainingRuntime').length}
+              />
             </div>
-            <PaginationControls 
-              pagination={trainingRuntimesPagination}
-              setPagination={setTrainingRuntimesPagination}
-              totalPages={paginateData(TRAINING_RUNTIMES, trainingRuntimesPagination).totalPages}
-              totalItems={TRAINING_RUNTIMES.length}
-            />
           </div>
 
           {/* Pod Status & Resource Utilization */}
