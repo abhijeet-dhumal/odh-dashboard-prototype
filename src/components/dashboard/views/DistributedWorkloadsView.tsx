@@ -171,15 +171,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
 
       {workloadsTab === 'status' ? (
         <>
-          {/* Namespace Scope Indicator */}
-          {selectedProject && selectedProject !== 'All Projects' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-blue-700">
-                <strong>Namespace Scope:</strong> Showing resources for "{selectedProject}" namespace. 
-                Cluster-wide resources (ClusterQueues, ResourceFlavors, Cohorts) remain visible as they are cluster-scoped.
-              </p>
-            </div>
-          )}
+
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div>
@@ -915,15 +907,7 @@ const DistributedWorkloadsView: React.FC<DistributedWorkloadsViewProps> = ({
         </>
       ) : workloadsTab === 'trainer' ? (
         <>
-          {/* Namespace Scope Indicator */}
-          {selectedProject && selectedProject !== 'All Projects' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-green-700">
-                <strong>Namespace Scope:</strong> Showing TrainJobs and namespace-scoped TrainingRuntimes for "{selectedProject}" namespace. 
-                ClusterTrainingRuntimes remain visible as they are cluster-wide resources.
-              </p>
-            </div>
-          )}
+
           
           {/* Kubeflow Trainer v2 Metrics Dashboard */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -24,7 +24,8 @@ import {
   PipelineRun, 
   Experiment, 
   Application, 
-  AvailableApp 
+  AvailableApp,
+  PROJECTS 
 } from '../../utils/constants';
 
 const DashboardMain = () => {
@@ -550,6 +551,8 @@ const DashboardMain = () => {
               </div>
             </button>
             
+
+            
             <div className="flex items-center space-x-3">
               <button className="p-2 hover:bg-gray-100 rounded-lg">
                 <Bell className="w-5 h-5 text-gray-600" />
@@ -576,6 +579,7 @@ const DashboardMain = () => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto bg-gray-50">
+
           {renderContent()}
         </div>
       </div>

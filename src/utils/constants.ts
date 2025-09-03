@@ -14,6 +14,97 @@ export interface TrainingJob {
   status: string;
 }
 
+// Hierarchical training job interfaces
+export interface Pod {
+  name: string;
+  status: string;
+  node: string;
+  created: string;
+  restarts: number;
+  logs?: string;
+}
+
+export interface Job {
+  name: string;
+  status: string;
+  completions: string;
+  duration: string;
+  created: string;
+  pods: Pod[];
+}
+
+export interface JobSet {
+  name: string;
+  status: string;
+  jobs: number;
+  created: string;
+  jobs_list: Job[];
+}
+
+export interface PytorchJob {
+  name: string;
+  project: string;
+  status: string;
+  created: string;
+  startTime?: string;
+  completionTime?: string;
+  duration?: string;
+  framework: string;
+  workerNodes: number;
+  clusterQueue: string;
+  namespace: string;
+  image: string;
+  command: string[];
+  resources: {
+    requests: { cpu: string; memory: string; 'nvidia.com/gpu'?: string };
+    limits: { cpu: string; memory: string; 'nvidia.com/gpu'?: string };
+  };
+  replicaSpecs: {
+    Master: { replicas: number; restartPolicy: string };
+    Worker: { replicas: number; restartPolicy: string };
+  };
+  conditions: Array<{
+    type: string;
+    status: string;
+    reason: string;
+    message: string;
+    lastTransitionTime: string;
+  }>;
+  pods: Pod[];
+}
+
+export interface TrainJobHierarchical {
+  name: string;
+  project: string;
+  status: string;
+  created: string;
+  startTime?: string;
+  completionTime?: string;
+  duration?: string;
+  framework: string;
+  runtime: string;
+  nodes: number;
+  namespace: string;
+  image: string;
+  command: string[];
+  resources: {
+    requests: { cpu: string; memory: string; 'nvidia.com/gpu'?: string };
+    limits: { cpu: string; memory: string; 'nvidia.com/gpu'?: string };
+  };
+  trainingRuntimeRef: {
+    name: string;
+    kind: 'TrainingRuntime' | 'ClusterTrainingRuntime';
+  };
+  conditions: Array<{
+    type: string;
+    status: string;
+    reason: string;
+    message: string;
+    lastTransitionTime: string;
+  }>;
+  jobsets: JobSet[];
+}
+
 export interface Workload {
   name: string;
   priority: number;
@@ -199,6 +290,26 @@ export const PROJECTS: Project[] = [
     name: 'istio-system',
     created: '04/08/2025, 18:10:45',
     owner: 'Unknown'
+  },
+  {
+    name: 'computer-vision',
+    created: '15/08/2025, 09:30:00',
+    owner: 'user-003'
+  },
+  {
+    name: 'nlp-research',
+    created: '12/08/2025, 14:20:00',
+    owner: 'user-004'
+  },
+  {
+    name: 'sentiment-analysis',
+    created: '18/08/2025, 11:45:00',
+    owner: 'user-005'
+  },
+  {
+    name: 'recommendation-engine',
+    created: '20/08/2025, 16:10:00',
+    owner: 'user-006'
   }
 ];
 
@@ -210,6 +321,572 @@ export const TRAINING_JOBS: TrainingJob[] = [
     clusterQueue: 'test-cq',
     created: '1 day ago',
     status: 'Created'
+  }
+];
+
+// Hierarchical training job data
+export const PYTORCH_JOBS: PytorchJob[] = [
+  {
+    name: 'pytorch-multi-node-job',
+    project: 'ml-workload-queue',
+    status: 'Running',
+    created: '2025-01-09T14:30:00Z',
+    startTime: '2025-01-09T14:30:45Z',
+    duration: '45m12s',
+    framework: 'PyTorch',
+    workerNodes: 2,
+    clusterQueue: 'test-cq',
+    namespace: 'ml-workload-queue',
+    image: 'pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel',
+    command: ['python3', '/opt/pytorch-mnist/mnist.py', '--epochs=10', '--batch-size=64'],
+    resources: {
+      requests: { cpu: '2', memory: '4Gi', 'nvidia.com/gpu': '1' },
+      limits: { cpu: '4', memory: '8Gi', 'nvidia.com/gpu': '1' }
+    },
+    replicaSpecs: {
+      Master: { replicas: 1, restartPolicy: 'OnFailure' },
+      Worker: { replicas: 1, restartPolicy: 'OnFailure' }
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'PyTorchJobCreated',
+        message: 'PyTorchJob pytorch-multi-node-job is created.',
+        lastTransitionTime: '2025-01-09T14:30:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'True',
+        reason: 'PyTorchJobRunning',
+        message: 'PyTorchJob pytorch-multi-node-job is running.',
+        lastTransitionTime: '2025-01-09T14:30:45Z'
+      }
+    ],
+    pods: [
+      {
+        name: 'pytorch-multi-node-job-master-0',
+        status: 'Running',
+        node: 'worker-node-1',
+        created: '2025-01-09T14:30:15Z',
+        restarts: 0,
+        logs: `[2025-01-09 14:30:15] INFO: Starting PyTorch training job
+[2025-01-09 14:30:16] INFO: Initializing distributed training
+[2025-01-09 14:30:17] INFO: Master node ready, waiting for workers
+[2025-01-09 14:30:18] INFO: All workers connected
+[2025-01-09 14:30:19] INFO: Training started - Epoch 1/10
+[2025-01-09 14:31:00] INFO: Epoch 1 completed - Loss: 0.8542
+[2025-01-09 14:31:30] INFO: Epoch 2 completed - Loss: 0.7234`
+      },
+      {
+        name: 'pytorch-multi-node-job-worker-0',
+        status: 'Running',
+        node: 'worker-node-2',
+        created: '2025-01-09T14:30:20Z',
+        restarts: 0,
+        logs: `[2025-01-09 14:30:20] INFO: Worker node starting
+[2025-01-09 14:30:21] INFO: Connecting to master node
+[2025-01-09 14:30:22] INFO: Connection established
+[2025-01-09 14:30:23] INFO: Waiting for training to start
+[2025-01-09 14:30:24] INFO: Training started on worker
+[2025-01-09 14:31:00] INFO: Epoch 1 processing completed
+[2025-01-09 14:31:30] INFO: Epoch 2 processing completed`
+      }
+    ]
+  },
+  {
+    name: 'pytorch-image-classification',
+    project: 'computer-vision',
+    status: 'Completed',
+    created: '2025-01-08T10:15:00Z',
+    startTime: '2025-01-08T10:15:30Z',
+    completionTime: '2025-01-08T12:30:16Z',
+    duration: '2h14m46s',
+    framework: 'PyTorch',
+    workerNodes: 1,
+    clusterQueue: 'gpu-cq',
+    namespace: 'computer-vision',
+    image: 'pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime',
+    command: ['python3', '/opt/image-classification/train.py', '--dataset=cifar10', '--model=resnet18'],
+    resources: {
+      requests: { cpu: '4', memory: '8Gi', 'nvidia.com/gpu': '1' },
+      limits: { cpu: '8', memory: '16Gi', 'nvidia.com/gpu': '1' }
+    },
+    replicaSpecs: {
+      Master: { replicas: 1, restartPolicy: 'Never' },
+      Worker: { replicas: 0, restartPolicy: 'Never' }
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'PyTorchJobCreated',
+        message: 'PyTorchJob pytorch-image-classification is created.',
+        lastTransitionTime: '2025-01-08T10:15:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'False',
+        reason: 'PyTorchJobRunning',
+        message: 'PyTorchJob pytorch-image-classification is running.',
+        lastTransitionTime: '2025-01-08T10:15:30Z'
+      },
+      {
+        type: 'Succeeded',
+        status: 'True',
+        reason: 'PyTorchJobSucceeded',
+        message: 'PyTorchJob pytorch-image-classification is successfully completed.',
+        lastTransitionTime: '2025-01-08T12:30:16Z'
+      }
+    ],
+    pods: [
+      {
+        name: 'pytorch-image-classification-master-0',
+        status: 'Completed',
+        node: 'gpu-node-1',
+        created: '2025-01-08T10:15:30Z',
+        restarts: 0,
+        logs: `[2025-01-08 10:15:30] INFO: Starting image classification training
+[2025-01-08 10:15:31] INFO: Loading dataset: CIFAR-10
+[2025-01-08 10:15:45] INFO: Dataset loaded - 50000 training samples
+[2025-01-08 10:16:00] INFO: Model initialized: ResNet-18
+[2025-01-08 10:16:01] INFO: Training started
+[2025-01-08 12:30:15] INFO: Training completed successfully
+[2025-01-08 12:30:16] INFO: Final accuracy: 94.2%`
+      }
+    ]
+  },
+  {
+    name: 'pytorch-nlp-training',
+    project: 'nlp-research',
+    status: 'Pending',
+    created: '2025-01-09T16:00:00Z',
+    framework: 'PyTorch',
+    workerNodes: 3,
+    clusterQueue: 'nlp-cq',
+    namespace: 'nlp-research',
+    image: 'huggingface/transformers-pytorch-gpu:4.21.0',
+    command: ['python3', '/opt/nlp-training/train_bert.py', '--model=bert-base-uncased'],
+    resources: {
+      requests: { cpu: '2', memory: '8Gi', 'nvidia.com/gpu': '2' },
+      limits: { cpu: '4', memory: '16Gi', 'nvidia.com/gpu': '2' }
+    },
+    replicaSpecs: {
+      Master: { replicas: 1, restartPolicy: 'OnFailure' },
+      Worker: { replicas: 2, restartPolicy: 'OnFailure' }
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'PyTorchJobCreated',
+        message: 'PyTorchJob pytorch-nlp-training is created.',
+        lastTransitionTime: '2025-01-09T16:00:00Z'
+      },
+      {
+        type: 'Pending',
+        status: 'True',
+        reason: 'PyTorchJobPending',
+        message: 'PyTorchJob pytorch-nlp-training is waiting for resources.',
+        lastTransitionTime: '2025-01-09T16:00:15Z'
+      }
+    ],
+    pods: [
+      {
+        name: 'pytorch-nlp-training-master-0',
+        status: 'Pending',
+        node: 'gpu-node-7',
+        created: '2025-01-09T16:00:15Z',
+        restarts: 0,
+        logs: `[2025-01-09 16:00:15] INFO: NLP training job initializing
+[2025-01-09 16:00:16] INFO: Waiting for resources to be allocated
+[2025-01-09 16:00:17] INFO: Queue position: 3`
+      }
+    ]
+  },
+  {
+    name: 'pytorch-recommendation-system',
+    project: 'recommendation-engine',
+    status: 'Failed',
+    created: '2025-01-08T08:00:00Z',
+    startTime: '2025-01-08T08:00:30Z',
+    completionTime: '2025-01-08T08:10:46Z',
+    duration: '10m16s',
+    framework: 'PyTorch',
+    workerNodes: 2,
+    clusterQueue: 'cpu-cq',
+    namespace: 'recommendation-engine',
+    image: 'pytorch/pytorch:1.13.1-cuda11.6-cudnn8-runtime',
+    command: ['python3', '/opt/recommendation/train.py', '--model=collaborative-filtering'],
+    resources: {
+      requests: { cpu: '4', memory: '16Gi' },
+      limits: { cpu: '8', memory: '32Gi' }
+    },
+    replicaSpecs: {
+      Master: { replicas: 1, restartPolicy: 'Never' },
+      Worker: { replicas: 1, restartPolicy: 'Never' }
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'PyTorchJobCreated',
+        message: 'PyTorchJob pytorch-recommendation-system is created.',
+        lastTransitionTime: '2025-01-08T08:00:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'False',
+        reason: 'PyTorchJobRunning',
+        message: 'PyTorchJob pytorch-recommendation-system is running.',
+        lastTransitionTime: '2025-01-08T08:00:30Z'
+      },
+      {
+        type: 'Failed',
+        status: 'True',
+        reason: 'PyTorchJobFailed',
+        message: 'PyTorchJob pytorch-recommendation-system failed due to OOM error.',
+        lastTransitionTime: '2025-01-08T08:10:46Z'
+      }
+    ],
+    pods: [
+      {
+        name: 'pytorch-recommendation-system-master-0',
+        status: 'Failed',
+        node: 'cpu-node-3',
+        created: '2025-01-08T08:00:30Z',
+        restarts: 2,
+        logs: `[2025-01-08 08:00:30] INFO: Recommendation system training starting
+[2025-01-08 08:05:15] ERROR: Out of memory error
+[2025-01-08 08:05:16] INFO: Restarting with reduced batch size
+[2025-01-08 08:10:45] ERROR: CUDA out of memory
+[2025-01-08 08:10:46] ERROR: Training failed after 2 restarts`
+      }
+    ]
+  }
+];
+
+export const TRAIN_JOBS_HIERARCHICAL: TrainJobHierarchical[] = [
+  {
+    name: 'llm-fine-tuning-job',
+    project: 'nlp-research',
+    status: 'Running',
+    created: '2025-01-09T09:00:00Z',
+    startTime: '2025-01-09T09:03:30Z',
+    duration: '45m30s',
+    framework: 'Transformers',
+    runtime: 'pytorch-runtime',
+    nodes: 4,
+    namespace: 'nlp-research',
+    image: 'huggingface/transformers-pytorch-gpu:4.25.0',
+    command: ['python3', '/opt/llm-training/fine_tune.py', '--model=gpt-3.5-turbo', '--dataset=custom'],
+    resources: {
+      requests: { cpu: '8', memory: '32Gi', 'nvidia.com/gpu': '4' },
+      limits: { cpu: '16', memory: '64Gi', 'nvidia.com/gpu': '4' }
+    },
+    trainingRuntimeRef: {
+      name: 'pytorch-runtime',
+      kind: 'TrainingRuntime'
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'TrainJobCreated',
+        message: 'TrainJob llm-fine-tuning-job is created.',
+        lastTransitionTime: '2025-01-09T09:00:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'True',
+        reason: 'TrainJobRunning',
+        message: 'TrainJob llm-fine-tuning-job is running.',
+        lastTransitionTime: '2025-01-09T09:03:30Z'
+      }
+    ],
+    jobsets: [
+      {
+        name: 'llm-fine-tuning-job-jobset',
+        status: 'Running',
+        jobs: 2,
+        created: '2025-01-09T09:00:30Z',
+        jobs_list: [
+          {
+            name: 'data-initializer',
+            status: 'Completed',
+            completions: '1/1',
+            duration: '2m30s',
+            created: '2025-01-09T09:00:45Z',
+            pods: [
+              {
+                name: 'data-initializer-pod-0',
+                status: 'Completed',
+                node: 'cpu-node-1',
+                created: '2025-01-09T09:00:50Z',
+                restarts: 0,
+                logs: `[2025-01-09 09:00:50] INFO: Data initializer starting
+[2025-01-09 09:00:51] INFO: Downloading training dataset
+[2025-01-09 09:01:30] INFO: Dataset downloaded: 2.3GB
+[2025-01-09 09:01:31] INFO: Preprocessing data
+[2025-01-09 09:03:15] INFO: Data preprocessing completed
+[2025-01-09 09:03:16] INFO: Data ready for training`
+              }
+            ]
+          },
+          {
+            name: 'trainer-job',
+            status: 'Running',
+            completions: '0/4',
+            duration: '45m12s',
+            created: '2025-01-09T09:03:30Z',
+            pods: [
+              {
+                name: 'trainer-job-master-0',
+                status: 'Running',
+                node: 'gpu-node-1',
+                created: '2025-01-09T09:03:45Z',
+                restarts: 0,
+                logs: `[2025-01-09 09:03:45] INFO: Master trainer starting
+[2025-01-09 09:03:46] INFO: Loading pre-trained model: GPT-3.5
+[2025-01-09 09:05:00] INFO: Model loaded successfully
+[2025-01-09 09:05:01] INFO: Initializing distributed training
+[2025-01-09 09:05:15] INFO: All workers connected
+[2025-01-09 09:05:16] INFO: Fine-tuning started
+[2025-01-09 09:30:00] INFO: Checkpoint saved - Step 1000`
+              },
+              {
+                name: 'trainer-job-worker-0',
+                status: 'Running',
+                node: 'gpu-node-2',
+                created: '2025-01-09T09:03:50Z',
+                restarts: 0,
+                logs: `[2025-01-09 09:03:50] INFO: Worker 0 starting
+[2025-01-09 09:03:51] INFO: Connecting to master
+[2025-01-09 09:05:14] INFO: Connected to master
+[2025-01-09 09:05:16] INFO: Training started on worker 0
+[2025-01-09 09:30:00] INFO: Step 1000 completed`
+              },
+              {
+                name: 'trainer-job-worker-1',
+                status: 'Running',
+                node: 'gpu-node-3',
+                created: '2025-01-09T09:03:55Z',
+                restarts: 0,
+                logs: `[2025-01-09 09:03:55] INFO: Worker 1 starting
+[2025-01-09 09:03:56] INFO: Connecting to master
+[2025-01-09 09:05:14] INFO: Connected to master
+[2025-01-09 09:05:16] INFO: Training started on worker 1
+[2025-01-09 09:30:00] INFO: Step 1000 completed`
+              },
+              {
+                name: 'trainer-job-worker-2',
+                status: 'Running',
+                node: 'gpu-node-4',
+                created: '2025-01-09T09:04:00Z',
+                restarts: 0,
+                logs: `[2025-01-09 09:04:00] INFO: Worker 2 starting
+[2025-01-09 09:04:01] INFO: Connecting to master
+[2025-01-09 09:05:14] INFO: Connected to master
+[2025-01-09 09:05:16] INFO: Training started on worker 2
+[2025-01-09 09:30:00] INFO: Step 1000 completed`
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'bert-sentiment-analysis',
+    project: 'sentiment-analysis',
+    status: 'Completed',
+    created: '2025-01-08T14:00:00Z',
+    startTime: '2025-01-08T14:06:00Z',
+    completionTime: '2025-01-08T15:30:00Z',
+    duration: '1h24m00s',
+    framework: 'Transformers',
+    runtime: 'huggingface-runtime',
+    nodes: 2,
+    namespace: 'sentiment-analysis',
+    image: 'huggingface/transformers-pytorch-gpu:4.24.0',
+    command: ['python3', '/opt/sentiment-analysis/train.py', '--model=bert-base-uncased', '--task=sentiment'],
+    resources: {
+      requests: { cpu: '4', memory: '16Gi', 'nvidia.com/gpu': '2' },
+      limits: { cpu: '8', memory: '32Gi', 'nvidia.com/gpu': '2' }
+    },
+    trainingRuntimeRef: {
+      name: 'huggingface-runtime',
+      kind: 'ClusterTrainingRuntime'
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'TrainJobCreated',
+        message: 'TrainJob bert-sentiment-analysis is created.',
+        lastTransitionTime: '2025-01-08T14:00:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'False',
+        reason: 'TrainJobRunning',
+        message: 'TrainJob bert-sentiment-analysis is running.',
+        lastTransitionTime: '2025-01-08T14:06:00Z'
+      },
+      {
+        type: 'Succeeded',
+        status: 'True',
+        reason: 'TrainJobSucceeded',
+        message: 'TrainJob bert-sentiment-analysis is successfully completed.',
+        lastTransitionTime: '2025-01-08T15:30:00Z'
+      }
+    ],
+    jobsets: [
+      {
+        name: 'bert-sentiment-analysis-jobset',
+        status: 'Completed',
+        jobs: 2,
+        created: '2025-01-08T14:00:30Z',
+        jobs_list: [
+          {
+            name: 'model-initializer',
+            status: 'Completed',
+            completions: '1/1',
+            duration: '5m15s',
+            created: '2025-01-08T14:00:45Z',
+            pods: [
+              {
+                name: 'model-initializer-pod-0',
+                status: 'Completed',
+                node: 'cpu-node-2',
+                created: '2025-01-08T14:00:50Z',
+                restarts: 0,
+                logs: `[2025-01-08 14:00:50] INFO: Model initializer starting
+[2025-01-08 14:00:51] INFO: Downloading BERT base model
+[2025-01-08 14:03:30] INFO: Model downloaded successfully
+[2025-01-08 14:03:31] INFO: Preparing model for fine-tuning
+[2025-01-08 14:05:45] INFO: Model initialization completed`
+              }
+            ]
+          },
+          {
+            name: 'training-job',
+            status: 'Completed',
+            completions: '2/2',
+            duration: '1h23m45s',
+            created: '2025-01-08T14:06:00Z',
+            pods: [
+              {
+                name: 'training-job-master-0',
+                status: 'Completed',
+                node: 'gpu-node-5',
+                created: '2025-01-08T14:06:15Z',
+                restarts: 0,
+                logs: `[2025-01-08 14:06:15] INFO: Training master starting
+[2025-01-08 14:06:16] INFO: Loading BERT model
+[2025-01-08 14:06:45] INFO: Model loaded successfully
+[2025-01-08 14:06:46] INFO: Loading sentiment dataset
+[2025-01-08 14:07:00] INFO: Dataset loaded: 25000 samples
+[2025-01-08 14:07:01] INFO: Training started
+[2025-01-08 15:30:00] INFO: Training completed - Accuracy: 92.4%`
+              },
+              {
+                name: 'training-job-worker-0',
+                status: 'Completed',
+                node: 'gpu-node-6',
+                created: '2025-01-08T14:06:20Z',
+                restarts: 0,
+                logs: `[2025-01-08 14:06:20] INFO: Training worker starting
+[2025-01-08 14:06:21] INFO: Connecting to master
+[2025-01-08 14:07:00] INFO: Connected, training started
+[2025-01-08 15:30:00] INFO: Training completed on worker`
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'vision-transformer-training',
+    project: 'computer-vision',
+    status: 'Running',
+    created: '2025-01-09T12:00:00Z',
+    startTime: '2025-01-09T12:01:00Z',
+    duration: '2h15m30s',
+    framework: 'Transformers',
+    runtime: 'vision-runtime',
+    nodes: 2,
+    namespace: 'computer-vision',
+    image: 'huggingface/transformers-pytorch-gpu:4.26.0',
+    command: ['python3', '/opt/vision-training/train_vit.py', '--model=vit-base-patch16-224', '--dataset=imagenet'],
+    resources: {
+      requests: { cpu: '6', memory: '24Gi', 'nvidia.com/gpu': '2' },
+      limits: { cpu: '12', memory: '48Gi', 'nvidia.com/gpu': '2' }
+    },
+    trainingRuntimeRef: {
+      name: 'vision-runtime',
+      kind: 'TrainingRuntime'
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'TrainJobCreated',
+        message: 'TrainJob vision-transformer-training is created.',
+        lastTransitionTime: '2025-01-09T12:00:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'True',
+        reason: 'TrainJobRunning',
+        message: 'TrainJob vision-transformer-training is running.',
+        lastTransitionTime: '2025-01-09T12:01:00Z'
+      }
+    ],
+    jobsets: [
+      {
+        name: 'vision-transformer-training-jobset',
+        status: 'Running',
+        jobs: 1,
+        created: '2025-01-09T12:00:30Z',
+        jobs_list: [
+          {
+            name: 'vision-training-job',
+            status: 'Running',
+            completions: '0/2',
+            duration: '2h15m30s',
+            created: '2025-01-09T12:01:00Z',
+            pods: [
+              {
+                name: 'vision-training-job-master-0',
+                status: 'Running',
+                node: 'gpu-node-8',
+                created: '2025-01-09T12:01:15Z',
+                restarts: 0,
+                logs: `[2025-01-09 12:01:15] INFO: Vision Transformer training starting
+[2025-01-09 12:01:16] INFO: Loading ImageNet dataset
+[2025-01-09 12:02:30] INFO: Dataset loaded: 1.2M images
+[2025-01-09 12:02:31] INFO: Initializing ViT-Base model
+[2025-01-09 12:03:00] INFO: Training started - Epoch 1/100
+[2025-01-09 14:15:00] INFO: Epoch 50 completed - Accuracy: 78.3%`
+              },
+              {
+                name: 'vision-training-job-worker-0',
+                status: 'Running',
+                node: 'gpu-node-9',
+                created: '2025-01-09T12:01:20Z',
+                restarts: 0,
+                logs: `[2025-01-09 12:01:20] INFO: Vision worker starting
+[2025-01-09 12:01:21] INFO: Connecting to master
+[2025-01-09 12:03:00] INFO: Connected, training started
+[2025-01-09 14:15:00] INFO: Epoch 50 processing completed`
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ];
 

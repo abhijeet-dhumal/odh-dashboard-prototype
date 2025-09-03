@@ -27,6 +27,15 @@ Advanced metrics for Kubeflow Trainer v2 with TrainJob and runtime management:
 ![Trainer Metrics - Runtime Management](./src/assets/trainer_metrics_2.png)
 *Separate TrainingRuntimes and ClusterTrainingRuntimes management*
 
+### Model Training Dashboard
+Hierarchical view of PyTorchJobs and TrainJobs with detailed metadata and pod inspection:
+
+![Model Training - PyTorchJob View](./src/assets/model_training_pytorchjob_view.png)
+*PyTorchJob hierarchical view with expandable pods and structured metadata*
+
+![Model Training - TrainJob View](./src/assets/model_training_trainjob_view.png)
+*TrainJob hierarchical view with JobSets, Jobs, and Pod drill-down capabilities*
+
 ## Getting Started
 
 ### Install dependencies

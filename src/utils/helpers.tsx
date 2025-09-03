@@ -141,3 +141,16 @@ export const isSubmenuActive = (currentView: string, subItemId: string): boolean
 
   return Object.values(submenuConditions).some(condition => condition);
 };
+
+/**
+ * Filter data by namespace, supporting "All Projects" option
+ */
+export const filterByNamespace = <T extends { namespace?: string }>(
+  data: T[], 
+  selectedProject: string
+): T[] => {
+  if (!selectedProject || selectedProject === 'All Projects') {
+    return data;
+  }
+  return data.filter(item => item.namespace === selectedProject);
+};
