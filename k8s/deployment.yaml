@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odh-dashboard
+  namespace: odh-dashboard
+  labels:
+    app: odh-dashboard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: odh-dashboard
+  template:
+    metadata:
+      labels:
+        app: odh-dashboard
+    spec:
+      containers:
+      - name: odh-dashboard
+        image: quay.io/abdhumal/odh-dashboard:0.0.2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-logs
+          mountPath: /var/log/nginx
+        env:
+        - name: NODE_ENV
+          value: "production"
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-logs
+        emptyDir: {}

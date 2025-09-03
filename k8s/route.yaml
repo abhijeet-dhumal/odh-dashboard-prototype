@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: odh-dashboard-route
+  namespace: odh-dashboard
+  labels:
+    app: odh-dashboard
+spec:
+  to:
+    kind: Service
+    name: odh-dashboard-service
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

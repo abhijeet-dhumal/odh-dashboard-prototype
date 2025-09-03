@@ -563,6 +563,145 @@ export const PYTORCH_JOBS: PytorchJob[] = [
 [2025-01-08 08:10:46] ERROR: Training failed after 2 restarts`
       }
     ]
+  },
+  {
+    name: 'pytorch-nlp-suspended',
+    project: 'nlp-research',
+    status: 'Suspended',
+    created: '2025-01-10T09:20:00Z',
+    startTime: '2025-01-10T09:20:30Z',
+    duration: '1h25m12s',
+    framework: 'PyTorch',
+    workerNodes: 3,
+    clusterQueue: 'nlp-cq',
+    namespace: 'nlp-research',
+    image: 'pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel',
+    command: ['python3', '/opt/nlp-training/train_bert.py', '--model=bert-base', '--epochs=5'],
+    resources: {
+      requests: { cpu: '6', memory: '12Gi', 'nvidia.com/gpu': '2' },
+      limits: { cpu: '12', memory: '24Gi', 'nvidia.com/gpu': '2' }
+    },
+    replicaSpecs: {
+      Master: { replicas: 1, restartPolicy: 'OnFailure' },
+      Worker: { replicas: 2, restartPolicy: 'OnFailure' }
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'PyTorchJobCreated',
+        message: 'PyTorchJob pytorch-nlp-suspended is created.',
+        lastTransitionTime: '2025-01-10T09:20:00Z'
+      },
+      {
+        type: 'Running',
+        status: 'False',
+        reason: 'PyTorchJobSuspended',
+        message: 'PyTorchJob pytorch-nlp-suspended has been suspended by user.',
+        lastTransitionTime: '2025-01-10T10:45:42Z'
+      },
+      {
+        type: 'Suspended',
+        status: 'True',
+        reason: 'PyTorchJobSuspended',
+        message: 'PyTorchJob pytorch-nlp-suspended is currently suspended.',
+        lastTransitionTime: '2025-01-10T10:45:42Z'
+      }
+    ],
+    pods: [
+      {
+        name: 'pytorch-nlp-suspended-master-0',
+        status: 'Terminated',
+        node: 'worker-node-3',
+        created: '2025-01-10T09:20:30Z',
+        restarts: 0,
+        logs: `[INFO] Starting BERT training...
+[INFO] Loading dataset from /data/nlp/corpus
+[INFO] Model: bert-base-uncased
+[INFO] Epochs: 5, Batch size: 32
+[INFO] Training suspended by user request
+[INFO] Saving checkpoint to /checkpoints/bert_epoch_2.pt
+[INFO] Training will resume from epoch 3 when restarted`
+      },
+      {
+        name: 'pytorch-nlp-suspended-worker-0',
+        status: 'Terminated',
+        node: 'worker-node-4',
+        created: '2025-01-10T09:20:35Z',
+        restarts: 0,
+        logs: `[INFO] Worker 0 initialized
+[INFO] Connected to master node
+[INFO] Processing training batches...
+[INFO] Received suspend signal
+[INFO] Gracefully shutting down worker 0`
+      },
+      {
+        name: 'pytorch-nlp-suspended-worker-1',
+        status: 'Terminated',
+        node: 'worker-node-5',
+        created: '2025-01-10T09:20:35Z',
+        restarts: 0,
+        logs: `[INFO] Worker 1 initialized
+[INFO] Connected to master node
+[INFO] Processing training batches...
+[INFO] Received suspend signal
+[INFO] Gracefully shutting down worker 1`
+      }
+    ]
+  },
+  {
+    name: 'pytorch-cv-paused',
+    project: 'computer-vision',
+    status: 'Suspended',
+    created: '2025-01-11T14:15:00Z',
+    startTime: '2025-01-11T14:15:45Z',
+    duration: '3h42m18s',
+    framework: 'PyTorch',
+    workerNodes: 4,
+    clusterQueue: 'gpu-cq',
+    namespace: 'computer-vision',
+    image: 'pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime',
+    command: ['python3', '/opt/cv-training/train_yolo.py', '--dataset=coco', '--model=yolov8'],
+    resources: {
+      requests: { cpu: '8', memory: '16Gi', 'nvidia.com/gpu': '4' },
+      limits: { cpu: '16', memory: '32Gi', 'nvidia.com/gpu': '4' }
+    },
+    replicaSpecs: {
+      Master: { replicas: 1, restartPolicy: 'OnFailure' },
+      Worker: { replicas: 3, restartPolicy: 'OnFailure' }
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'PyTorchJobCreated',
+        message: 'PyTorchJob pytorch-cv-paused is created.',
+        lastTransitionTime: '2025-01-11T14:15:00Z'
+      },
+      {
+        type: 'Suspended',
+        status: 'True',
+        reason: 'ResourceConstraints',
+        message: 'PyTorchJob pytorch-cv-paused suspended due to resource constraints.',
+        lastTransitionTime: '2025-01-11T17:57:18Z'
+      }
+    ],
+    pods: [
+      {
+        name: 'pytorch-cv-paused-master-0',
+        status: 'Terminated',
+        node: 'gpu-node-1',
+        created: '2025-01-11T14:15:45Z',
+        restarts: 0,
+        logs: `[INFO] Starting YOLO training on COCO dataset
+[INFO] Model: YOLOv8-large
+[INFO] GPU devices: 4x A100
+[INFO] Training progress: 65% complete
+[INFO] Current mAP: 0.847
+[INFO] Training suspended - checkpoint saved
+[INFO] Resume from checkpoint: /checkpoints/yolo_epoch_15.pt`
+      }
+    ]
   }
 ];
 
@@ -881,6 +1020,217 @@ export const TRAIN_JOBS_HIERARCHICAL: TrainJobHierarchical[] = [
 [2025-01-09 12:01:21] INFO: Connecting to master
 [2025-01-09 12:03:00] INFO: Connected, training started
 [2025-01-09 14:15:00] INFO: Epoch 50 processing completed`
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'bert-pretraining-suspended',
+    project: 'nlp-research',
+    status: 'Suspended',
+    created: '2025-01-12T08:30:00Z',
+    startTime: '2025-01-12T08:33:15Z',
+    duration: '2h15m30s',
+    framework: 'Transformers',
+    runtime: 'llm-runtime',
+    nodes: 8,
+    namespace: 'nlp-research',
+    image: 'huggingface/transformers-pytorch-gpu:4.25.0',
+    command: ['python3', '/opt/bert-training/pretrain.py', '--model=bert-large', '--dataset=wikipedia'],
+    resources: {
+      requests: { cpu: '16', memory: '64Gi', 'nvidia.com/gpu': '8' },
+      limits: { cpu: '32', memory: '128Gi', 'nvidia.com/gpu': '8' }
+    },
+    trainingRuntimeRef: {
+      name: 'llm-runtime',
+      kind: 'ClusterTrainingRuntime'
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'TrainJobCreated',
+        message: 'TrainJob bert-pretraining-suspended is created.',
+        lastTransitionTime: '2025-01-12T08:30:00Z'
+      },
+      {
+        type: 'Suspended',
+        status: 'True',
+        reason: 'UserRequested',
+        message: 'TrainJob bert-pretraining-suspended suspended by user request.',
+        lastTransitionTime: '2025-01-12T10:45:45Z'
+      }
+    ],
+    jobsets: [
+      {
+        name: 'bert-pretraining-suspended-jobset',
+        status: 'Suspended',
+        jobs: 3,
+        created: '2025-01-12T08:30:30Z',
+        jobs_list: [
+          {
+            name: 'dataset-initializer',
+            status: 'Completed',
+            completions: '1/1',
+            duration: '2m45s',
+            created: '2025-01-12T08:30:30Z',
+            pods: [
+              {
+                name: 'dataset-initializer-pod-0',
+                status: 'Completed',
+                node: 'data-node-1',
+                created: '2025-01-12T08:30:35Z',
+                restarts: 0,
+                logs: `[INFO] Initializing Wikipedia dataset
+[INFO] Downloaded 50GB of training data
+[INFO] Preprocessing completed
+[INFO] Dataset ready for training`
+              }
+            ]
+          },
+          {
+            name: 'model-initializer',
+            status: 'Completed',
+            completions: '1/1',
+            duration: '1m20s',
+            created: '2025-01-12T08:32:15Z',
+            pods: [
+              {
+                name: 'model-initializer-pod-0',
+                status: 'Completed',
+                node: 'gpu-node-1',
+                created: '2025-01-12T08:32:20Z',
+                restarts: 0,
+                logs: `[INFO] Initializing BERT-Large model
+[INFO] Model weights loaded
+[INFO] Distributed training setup complete`
+              }
+            ]
+          },
+          {
+            name: 'trainer-nodes',
+            status: 'Suspended',
+            completions: '0/8',
+            duration: '2h15m30s',
+            created: '2025-01-12T08:33:15Z',
+            pods: [
+              {
+                name: 'trainer-nodes-0',
+                status: 'Terminated',
+                node: 'gpu-node-2',
+                created: '2025-01-12T08:33:20Z',
+                restarts: 0,
+                logs: `[INFO] BERT pretraining started
+[INFO] Training progress: 35% complete
+[INFO] Current loss: 2.847
+[INFO] Checkpoint saved: /checkpoints/bert_step_15000.pt
+[INFO] Training suspended - graceful shutdown`
+              },
+              {
+                name: 'trainer-nodes-1',
+                status: 'Terminated',
+                node: 'gpu-node-3',
+                created: '2025-01-12T08:33:20Z',
+                restarts: 0,
+                logs: `[INFO] Worker node 1 initialized
+[INFO] Synchronized with master
+[INFO] Processing training batches
+[INFO] Suspend signal received
+[INFO] Worker node 1 shutdown complete`
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'vision-transformer-paused',
+    project: 'computer-vision',
+    status: 'Suspended',
+    created: '2025-01-13T16:45:00Z',
+    startTime: '2025-01-13T16:47:30Z',
+    duration: '4h22m15s',
+    framework: 'PyTorch',
+    runtime: 'pytorch-runtime',
+    nodes: 6,
+    namespace: 'computer-vision',
+    image: 'pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel',
+    command: ['python3', '/opt/vit-training/train_vit.py', '--model=vit-large', '--dataset=imagenet'],
+    resources: {
+      requests: { cpu: '12', memory: '48Gi', 'nvidia.com/gpu': '6' },
+      limits: { cpu: '24', memory: '96Gi', 'nvidia.com/gpu': '6' }
+    },
+    trainingRuntimeRef: {
+      name: 'pytorch-runtime',
+      kind: 'TrainingRuntime'
+    },
+    conditions: [
+      {
+        type: 'Created',
+        status: 'True',
+        reason: 'TrainJobCreated',
+        message: 'TrainJob vision-transformer-paused is created.',
+        lastTransitionTime: '2025-01-13T16:45:00Z'
+      },
+      {
+        type: 'Suspended',
+        status: 'True',
+        reason: 'ResourceConstraints',
+        message: 'TrainJob vision-transformer-paused suspended due to cluster resource constraints.',
+        lastTransitionTime: '2025-01-13T21:09:45Z'
+      }
+    ],
+    jobsets: [
+      {
+        name: 'vision-transformer-paused-jobset',
+        status: 'Suspended',
+        jobs: 2,
+        created: '2025-01-13T16:45:30Z',
+        jobs_list: [
+          {
+            name: 'data-loader',
+            status: 'Completed',
+            completions: '1/1',
+            duration: '1h15m30s',
+            created: '2025-01-13T16:45:30Z',
+            pods: [
+              {
+                name: 'data-loader-pod-0',
+                status: 'Completed',
+                node: 'storage-node-1',
+                created: '2025-01-13T16:45:35Z',
+                restarts: 0,
+                logs: `[INFO] Loading ImageNet dataset
+[INFO] Data preprocessing pipeline initialized
+[INFO] 1.2M training images loaded
+[INFO] Data augmentation configured
+[INFO] Dataset ready for distributed training`
+              }
+            ]
+          },
+          {
+            name: 'vit-training-workers',
+            status: 'Suspended',
+            completions: '0/6',
+            duration: '4h22m15s',
+            created: '2025-01-13T16:47:30Z',
+            pods: [
+              {
+                name: 'vit-training-workers-0',
+                status: 'Terminated',
+                node: 'gpu-node-4',
+                created: '2025-01-13T16:47:35Z',
+                restarts: 0,
+                logs: `[INFO] Vision Transformer training initialized
+[INFO] Model: ViT-Large/16
+[INFO] Training progress: 78% complete
+[INFO] Current accuracy: 84.2%
+[INFO] Best checkpoint saved: /checkpoints/vit_best.pt
+[INFO] Training suspended due to resource constraints`
               }
             ]
           }

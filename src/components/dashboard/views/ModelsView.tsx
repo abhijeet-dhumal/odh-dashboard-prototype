@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Layers, Cpu, ChevronDown, ChevronRight, HelpCircle, User, Play, Terminal, Server, FileText, Box, Clock, Info, HardDrive } from 'lucide-react';
+import { Package, Layers, Cpu, ChevronDown, ChevronRight, HelpCircle, User, Play, Terminal, Server, FileText, Box, Clock, Info, HardDrive, MoreVertical, Pause, Square, Trash2 } from 'lucide-react';
 import { getStatusIcon, filterByNamespace } from '../../../utils/helpers';
 import { PYTORCH_JOBS, TRAIN_JOBS_HIERARCHICAL, PytorchJob, TrainJobHierarchical, Pod, PROJECTS } from '../../../utils/constants';
 
@@ -84,7 +84,75 @@ const LogsModal: React.FC<LogsModalProps> = ({ isOpen, onClose, podName, logs })
   );
 };
 
+// Action Dropdown Component
+interface ActionDropdownProps {
+  jobName: string;
+  jobStatus: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onAction: (action: 'suspend' | 'resume' | 'delete') => void;
+}
 
+const ActionDropdown: React.FC<ActionDropdownProps> = ({ jobName, jobStatus, isOpen, onToggle, onAction }) => {
+  const canSuspend = jobStatus === 'Running' || jobStatus === 'Pending';
+  const canResume = jobStatus === 'Suspended';
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+        title="Job Actions"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <div className="py-1">
+            {canSuspend && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction('suspend');
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+              >
+                <Pause className="w-3 h-3 mr-2" />
+                Suspend
+              </button>
+            )}
+            {canResume && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction('resume');
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+              >
+                <Play className="w-3 h-3 mr-2" />
+                Resume
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction('delete');
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+            >
+              <Trash2 className="w-3 h-3 mr-2" />
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ModelsView: React.FC<ModelsViewProps> = ({
   view,
@@ -122,6 +190,9 @@ const ModelsView: React.FC<ModelsViewProps> = ({
     logs: ''
   });
 
+  // State for action dropdowns
+  const [openActionDropdown, setOpenActionDropdown] = useState<string | null>(null);
+
 
 
   const showPodLogs = (podName: string, logs: string) => {
@@ -138,6 +209,17 @@ const ModelsView: React.FC<ModelsViewProps> = ({
       podName: '',
       logs: ''
     });
+  };
+
+  // Action handlers
+  const handleJobAction = (jobName: string, action: 'suspend' | 'resume' | 'delete') => {
+    console.log(`${action} job: ${jobName}`);
+    // TODO: Implement actual API calls for job actions
+    setOpenActionDropdown(null);
+  };
+
+  const toggleActionDropdown = (jobName: string) => {
+    setOpenActionDropdown(openActionDropdown === jobName ? null : jobName);
   };
 
   // Toggle functions for hierarchical view
@@ -243,7 +325,20 @@ const ModelsView: React.FC<ModelsViewProps> = ({
     setShowJobSetMetadata(new Set());
     setShowJobMetadata(new Set());
     setShowPodMetadata(new Set());
+    setOpenActionDropdown(null);
   }, [selectedProject, activeTrainingTab]);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenActionDropdown(null);
+    };
+
+    if (openActionDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openActionDropdown]);
 
   // Metadata card components
   const PytorchJobMetadata: React.FC<{job: PytorchJob}> = ({ job }) => (
@@ -742,6 +837,13 @@ const ModelsView: React.FC<ModelsViewProps> = ({
                         
                         {/* Action Buttons */}
                         <div className="flex items-center space-x-2 ml-4">
+                          <ActionDropdown
+                            jobName={job.name}
+                            jobStatus={job.status}
+                            isOpen={openActionDropdown === job.name}
+                            onToggle={() => toggleActionDropdown(job.name)}
+                            onAction={(action) => handleJobAction(job.name, action)}
+                          />
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -887,6 +989,13 @@ const ModelsView: React.FC<ModelsViewProps> = ({
                         
                         {/* Action Buttons */}
                         <div className="flex items-center space-x-2 ml-4">
+                          <ActionDropdown
+                            jobName={trainJob.name}
+                            jobStatus={trainJob.status}
+                            isOpen={openActionDropdown === trainJob.name}
+                            onToggle={() => toggleActionDropdown(trainJob.name)}
+                            onAction={(action) => handleJobAction(trainJob.name, action)}
+                          />
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

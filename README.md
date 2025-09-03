@@ -52,3 +52,28 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## Containerization & Deployment
+
+### Podman Build
+Build the containerized application:
+```bash
+# Using Podman
+podman build -t odh-dashboard:latest .
+```
+
+### Run Locally with Podman
+Run the containerized application locally:
+```bash
+# Basic run
+podman run -d --name odh-dashboard -p 8080:8080 quay.io/abdhumal/odh-dashboard:0.0.2
+```
+Access the application at: http://localhost:8080
+
+#### Deployment
+
+**Deploy to OpenShift using Kustomize:**
+   ```bash
+   # Deploy all manifests
+   oc apply -k k8s/
+   ```
